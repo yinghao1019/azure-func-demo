@@ -1,4 +1,4 @@
-package com.howhow.functions;
+package com.howhow.functions.handler;
 
 import java.util.*;
 import com.microsoft.azure.functions.annotation.*;

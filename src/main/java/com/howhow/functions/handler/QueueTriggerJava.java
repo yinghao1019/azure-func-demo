@@ -1,4 +1,4 @@
-package com.howhow.functions;
+package com.howhow.functions.handler;
 
 import com.microsoft.azure.functions.annotation.*;
 import com.microsoft.azure.functions.*;
