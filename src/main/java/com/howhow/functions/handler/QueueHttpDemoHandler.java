@@ -30,7 +30,7 @@ public class QueueHttpDemoHandler {
               name = "req",
               methods = {HttpMethod.GET},
               authLevel = AuthorizationLevel.ANONYMOUS,
-              route = "/queue/{queueName:alpha}/messages")
+              route = "queue/{queueName:alpha}/messages")
           HttpRequestMessage<String> request,
       @BindingName("queueName") String queueName,
       final ExecutionContext context) {
@@ -41,7 +41,7 @@ public class QueueHttpDemoHandler {
     logger.info("Get Parameters : " + reqParams);
 
     String maxMsg = reqParams.getOrDefault("maxMsg", "1");
-    String visibleTimeOut = reqParams.get("visibleTimeOut");
+    String visibleTimeOut = reqParams.getOrDefault("visibleTimeOut", "30");
     Duration visibleTimeOutDuration = Duration.ofSeconds(Integer.valueOf(visibleTimeOut));
     QueueClient queueClient =
         QueueUtils.createQueueClient(queueName, QueueUtils.getDefaultConnString());
@@ -78,9 +78,9 @@ public class QueueHttpDemoHandler {
   public HttpResponseMessage addQueueMessage(
       @HttpTrigger(
               name = "req",
-              methods = {HttpMethod.GET},
+              methods = {HttpMethod.POST},
               authLevel = AuthorizationLevel.ANONYMOUS,
-              route = "/queue/{queueName:alpha}/messages")
+              route = "queue/{queueName:alpha}/messages")
           HttpRequestMessage<MessageDTO> request,
       @BindingName("queueName") String queueName,
       final ExecutionContext context) {
@@ -119,7 +119,7 @@ public class QueueHttpDemoHandler {
               name = "req",
               methods = {HttpMethod.PUT},
               authLevel = AuthorizationLevel.ANONYMOUS,
-              route = "/queue/{queueName:alpha}/messages/{messageId:aplha}")
+              route = "queue/{queueName:alpha}/messages/{messageId:alpha}")
           HttpRequestMessage<Optional<MessageDTO>> request,
       @BindingName("queueName") String queueName,
       @BindingName("messageId") String messageId,
@@ -168,7 +168,7 @@ public class QueueHttpDemoHandler {
               name = "req",
               methods = {HttpMethod.DELETE},
               authLevel = AuthorizationLevel.ANONYMOUS,
-              route = "/queue/{queueName:alpha}/messages/{messageId:aplha}")
+              route = "queue/{queueName:alpha}/messages/{messageId:alpha}")
           HttpRequestMessage<String> request,
       @BindingName("queueName") String queueName,
       @BindingName("messageId") String messageId,
