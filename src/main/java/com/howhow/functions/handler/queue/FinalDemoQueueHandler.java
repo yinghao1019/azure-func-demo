@@ -9,10 +9,10 @@ import java.util.logging.Logger;
 
 public class FinalDemoQueueHandler {
   @StorageAccount("AzureWebJobsStorage")
-  @FunctionName("asyncCreateMember")
+  @FunctionName("AsyncGetQueueMsg")
   public void asyncGetQueueMsg(
       @BindingName("Id") String messageId,
-      @QueueTrigger(name = "message", queueName = "") String message,
+      @QueueTrigger(name = "message", queueName = "final-demo") String message,
       final ExecutionContext context) {
     Logger logger = context.getLogger();
     logger.info("receive Message. id: " + messageId + ", message: " + message);
