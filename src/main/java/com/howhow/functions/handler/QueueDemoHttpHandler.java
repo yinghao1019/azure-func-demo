@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
-public class QueueHttpDemoHandler {
+public class QueueDemoHttpHandler {
 
   @FunctionName("GetQueueMessage")
   public HttpResponseMessage getQueueMessage(
