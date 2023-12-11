@@ -1,4 +1,4 @@
-package com.howhow.functions.handler;
+package com.howhow.functions.handler.http;
 
 import com.azure.core.util.Context;
 import com.azure.storage.queue.QueueClient;
@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
-public class QueueDemoHttpHandler {
+public class FinalDemoHttpHandler {
 
   @FunctionName("GetQueueMessage")
   public HttpResponseMessage getQueueMessage(
@@ -137,7 +137,7 @@ public class QueueDemoHttpHandler {
           .body("popReceipt is required")
           .build();
     }
-    // delete message with queue
+    // update message with queue
     if (!request.getBody().isPresent()) {
       return request
           .createResponseBuilder(HttpStatus.BAD_REQUEST)
@@ -149,7 +149,7 @@ public class QueueDemoHttpHandler {
       UpdateMessageResult updateMessageResult =
           queueClient.updateMessage(
               messageId, popReceipt, request.getBody().get().getMessage(), null);
-
+      // create queue success response
       QueueMsgDTO queueMsgDTO = new QueueMsgDTO();
       queueMsgDTO.setNextVisibleTime(updateMessageResult.getTimeNextVisible());
       queueMsgDTO.setPopReceipt(updateMessageResult.getPopReceipt());
