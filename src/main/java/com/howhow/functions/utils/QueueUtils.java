@@ -47,4 +47,8 @@ public class QueueUtils {
     return new ProxyOptions(
         ProxyOptions.Type.HTTP, new InetSocketAddress(proxyHost, Integer.parseInt(proxyPort)));
   }
+
+  public static String getDefaultConnString() {
+    return System.getenv("AzureWebJobsStorage");
+  }
 }
