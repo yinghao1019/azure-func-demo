@@ -14,7 +14,7 @@ import java.time.Duration;
 public class QueueUtils {
   private static final Integer retryMaxTimes = 3;
   private static final Integer retryDelayTimeout = 3;
-
+  // TODO proxy auto config
   private static final HttpClient httpClient = new NettyAsyncHttpClientBuilder().build();
 
   public static QueueClient createQueueClient(String queueName, String connString) {
