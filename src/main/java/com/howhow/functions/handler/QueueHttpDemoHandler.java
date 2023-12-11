@@ -2,6 +2,7 @@ package com.howhow.functions.handler;
 
 import com.azure.core.util.Context;
 import com.azure.storage.queue.QueueClient;
+import com.azure.storage.queue.models.SendMessageResult;
 import com.azure.storage.queue.models.UpdateMessageResult;
 import com.howhow.functions.model.dto.MessageDTO;
 import com.howhow.functions.model.dto.QueueMsgDTO;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 public class QueueHttpDemoHandler {
 
@@ -28,7 +30,7 @@ public class QueueHttpDemoHandler {
               name = "req",
               methods = {HttpMethod.GET},
               authLevel = AuthorizationLevel.ANONYMOUS,
-              route = "/queue/{queueName:alpha}")
+              route = "/queue/{queueName:alpha}/messages")
           HttpRequestMessage<String> request,
       @BindingName("queueName") String queueName,
       final ExecutionContext context) {
@@ -69,6 +71,45 @@ public class QueueHttpDemoHandler {
         .createResponseBuilder(HttpStatus.OK)
         .header("content-type", "application/json")
         .body(JsonUtils.toJsonString(queueMsgDTOList))
+        .build();
+  }
+
+  @FunctionName("addQueueMessage")
+  public HttpResponseMessage addQueueMessage(
+      @HttpTrigger(
+              name = "req",
+              methods = {HttpMethod.GET},
+              authLevel = AuthorizationLevel.ANONYMOUS,
+              route = "/queue/{queueName:alpha}/messages")
+          HttpRequestMessage<MessageDTO> request,
+      @BindingName("queueName") String queueName,
+      final ExecutionContext context) {
+    String message = request.getBody().getMessage();
+
+    // valid data
+    if (StringUtils.isEmpty(message)) {
+      return request
+          .createResponseBuilder(HttpStatus.OK)
+          .header("content-type", "application/json")
+          .body("message data is null")
+          .build();
+    }
+    //  send Message
+    QueueClient queueClient =
+        QueueUtils.createQueueClient(queueName, QueueUtils.getDefaultConnString());
+    SendMessageResult sendResult = queueClient.sendMessage(message);
+
+    QueueMsgDTO queueMsgDTO = new QueueMsgDTO();
+    queueMsgDTO.setMessageId(sendResult.getMessageId());
+    queueMsgDTO.setInsertionTime(sendResult.getInsertionTime());
+    queueMsgDTO.setExpirationTime(sendResult.getExpirationTime());
+    queueMsgDTO.setNextVisibleTime(sendResult.getTimeNextVisible());
+    queueMsgDTO.setPopReceipt(sendResult.getPopReceipt());
+
+    return request
+        .createResponseBuilder(HttpStatus.OK)
+        .header("content-type", "application/json")
+        .body(JsonUtils.toJsonString(queueMsgDTO))
         .build();
   }
 
