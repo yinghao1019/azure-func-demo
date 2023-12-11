@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.Map;
 public class JsonUtils {
   private static final ObjectMapper MAPPER =
       new ObjectMapper()
+              .registerModule(new JavaTimeModule())
           .setSerializationInclusion(JsonInclude.Include.NON_NULL)
           .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
           .configure(WRITE_DATES_AS_TIMESTAMPS, false);
