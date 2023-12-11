@@ -2,6 +2,7 @@ package com.howhow.functions.handler;
 
 import com.azure.core.util.Context;
 import com.azure.storage.queue.QueueClient;
+import com.azure.storage.queue.models.UpdateMessageResult;
 import com.howhow.functions.model.dto.MessageDTO;
 import com.howhow.functions.model.dto.QueueMsgDTO;
 import com.howhow.functions.utils.JsonUtils;
@@ -11,13 +12,11 @@ import com.microsoft.azure.functions.HttpMethod;
 import com.microsoft.azure.functions.HttpRequestMessage;
 import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
-import com.microsoft.azure.functions.annotation.AuthorizationLevel;
-import com.microsoft.azure.functions.annotation.BindingName;
-import com.microsoft.azure.functions.annotation.FunctionName;
-import com.microsoft.azure.functions.annotation.HttpTrigger;
+import com.microsoft.azure.functions.annotation.*;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -68,8 +67,58 @@ public class QueueHttpDemoHandler {
 
     return request
         .createResponseBuilder(HttpStatus.OK)
+        .header("content-type", "application/json")
         .body(JsonUtils.toJsonString(queueMsgDTOList))
         .build();
+  }
+
+  @FunctionName("updateQueueMessage")
+  public HttpResponseMessage updateQueueMessage(
+      @HttpTrigger(
+              name = "req",
+              methods = {HttpMethod.PUT},
+              authLevel = AuthorizationLevel.ANONYMOUS,
+              route = "/queue/{queueName:alpha}/messages/{messageId:aplha}")
+          HttpRequestMessage<Optional<MessageDTO>> request,
+      @BindingName("queueName") String queueName,
+      @BindingName("messageId") String messageId,
+      final ExecutionContext context) {
+
+    Logger logger = context.getLogger();
+    Map<String, String> reqParams = request.getQueryParameters();
+
+    logger.info("Get Parameters : " + reqParams);
+    // check parameters
+    String popReceipt = reqParams.get("popReceipt");
+    if (popReceipt == null) {
+      return request
+          .createResponseBuilder(HttpStatus.BAD_REQUEST)
+          .body("popReceipt is required")
+          .build();
+    }
+    // delete message with queue
+    if (!request.getBody().isPresent()) {
+      return request
+          .createResponseBuilder(HttpStatus.BAD_REQUEST)
+          .body("message body is required")
+          .build();
+    } else {
+      QueueClient queueClient =
+          QueueUtils.createQueueClient(queueName, QueueUtils.getDefaultConnString());
+      UpdateMessageResult updateMessageResult =
+          queueClient.updateMessage(
+              messageId, popReceipt, request.getBody().get().getMessage(), null);
+
+      QueueMsgDTO queueMsgDTO = new QueueMsgDTO();
+      queueMsgDTO.setNextVisibleTime(updateMessageResult.getTimeNextVisible());
+      queueMsgDTO.setPopReceipt(updateMessageResult.getPopReceipt());
+
+      return request
+          .createResponseBuilder(HttpStatus.OK)
+          .header("content-type", "application/json")
+          .body(JsonUtils.toJsonString(queueMsgDTO))
+          .build();
+    }
   }
 
   @FunctionName("deleteQueueMessage")
@@ -99,12 +148,13 @@ public class QueueHttpDemoHandler {
     // delete message with queue
     QueueClient queueClient =
         QueueUtils.createQueueClient(queueName, QueueUtils.getDefaultConnString());
-
     queueClient.deleteMessage(messageId, popReceipt);
+
     MessageDTO messageDTO = new MessageDTO();
     messageDTO.setMessage(String.format("delete message %s success", messageId));
     return request
         .createResponseBuilder(HttpStatus.OK)
+        .header("content-type", "application/json")
         .body(JsonUtils.toJsonString(messageDTO))
         .build();
   }
