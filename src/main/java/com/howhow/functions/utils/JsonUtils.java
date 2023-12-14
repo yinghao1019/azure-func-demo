@@ -15,12 +15,16 @@ import java.util.Map;
 public class JsonUtils {
   private static final ObjectMapper MAPPER =
       new ObjectMapper()
-              .registerModule(new JavaTimeModule())
+          .registerModule(new JavaTimeModule())
           .setSerializationInclusion(JsonInclude.Include.NON_NULL)
           .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
           .configure(WRITE_DATES_AS_TIMESTAMPS, false);
 
   private JsonUtils() {}
+
+  public static ObjectMapper getObjectMapper() {
+    return MAPPER;
+  }
 
   public static String toJsonString(Object o) {
     try {
