@@ -29,7 +29,7 @@ public class QueueDemoHttpHandler {
       @HttpTrigger(
               name = "req",
               methods = {HttpMethod.GET},
-              authLevel = AuthorizationLevel.ANONYMOUS,
+              authLevel = AuthorizationLevel.FUNCTION,
               route = "queue/{queueName}/messages")
           HttpRequestMessage<String> request,
       @BindingName("queueName") String queueName,
@@ -79,7 +79,7 @@ public class QueueDemoHttpHandler {
       @HttpTrigger(
               name = "req",
               methods = {HttpMethod.POST},
-              authLevel = AuthorizationLevel.ANONYMOUS,
+              authLevel = AuthorizationLevel.FUNCTION,
               route = "queue/{queueName}/messages")
           HttpRequestMessage<MessageDTO> request,
       @BindingName("queueName") String queueName,
@@ -118,7 +118,7 @@ public class QueueDemoHttpHandler {
       @HttpTrigger(
               name = "req",
               methods = {HttpMethod.PUT},
-              authLevel = AuthorizationLevel.ANONYMOUS,
+              authLevel = AuthorizationLevel.FUNCTION,
               route = "queue/{queueName}/messages/{messageId:alpha}")
           HttpRequestMessage<Optional<MessageDTO>> request,
       @BindingName("queueName") String queueName,
@@ -167,7 +167,7 @@ public class QueueDemoHttpHandler {
       @HttpTrigger(
               name = "req",
               methods = {HttpMethod.DELETE},
-              authLevel = AuthorizationLevel.ANONYMOUS,
+              authLevel = AuthorizationLevel.FUNCTION,
               route = "queue/{queueName}/messages/{messageId:alpha}")
           HttpRequestMessage<String> request,
       @BindingName("queueName") String queueName,
