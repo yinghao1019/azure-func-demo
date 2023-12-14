@@ -1,9 +1,13 @@
-package com.howhow.functions.handler;
+package com.howhow.functions.handler.http;
 
+import com.azure.core.http.rest.PagedIterable;
 import com.azure.core.util.Context;
 import com.azure.storage.queue.QueueClient;
+import com.azure.storage.queue.models.QueueMessageItem;
+import com.azure.storage.queue.models.QueueStorageException;
 import com.azure.storage.queue.models.SendMessageResult;
 import com.azure.storage.queue.models.UpdateMessageResult;
+import com.howhow.functions.model.dto.ErrorMessageDTO;
 import com.howhow.functions.model.dto.MessageDTO;
 import com.howhow.functions.model.dto.QueueMsgDTO;
 import com.howhow.functions.utils.JsonUtils;
@@ -22,7 +26,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
-public class QueueDemoHttpHandler {
+public class FinalDemoHttpHandler {
 
   @FunctionName("GetQueueMessage")
   public HttpResponseMessage getQueueMessage(
@@ -46,14 +50,26 @@ public class QueueDemoHttpHandler {
     QueueClient queueClient =
         QueueUtils.createQueueClient(queueName, QueueUtils.getDefaultConnString());
 
+    PagedIterable<QueueMessageItem> queueMessageItems = null;
+    try {
+      queueMessageItems =
+          queueClient.receiveMessages(
+              Integer.valueOf(maxMsg),
+              visibleTimeOutDuration,
+              Duration.ofSeconds(30),
+              Context.NONE);
+    } catch (QueueStorageException e) {
+      logger.warning("query queue message error:%s" + e.getMessage());
+
+      return request
+          .createResponseBuilder(HttpStatus.BAD_REQUEST)
+          .header("content-type", "application/json")
+          .body(createErrorResponseBody(e.getErrorCode().toString(), e.getServiceMessage()))
+          .build();
+    }
+
     List<QueueMsgDTO> queueMsgDTOList =
-        queueClient
-            .receiveMessages(
-                Integer.valueOf(maxMsg),
-                visibleTimeOutDuration,
-                Duration.ofSeconds(30),
-                Context.NONE)
-            .stream()
+        queueMessageItems.stream()
             .map(
                 queueMessageItem -> {
                   QueueMsgDTO queueMsgDTO = new QueueMsgDTO();
@@ -85,11 +101,11 @@ public class QueueDemoHttpHandler {
       @BindingName("queueName") String queueName,
       final ExecutionContext context) {
     String message = request.getBody().getMessage();
-
+    Logger logger = context.getLogger();
     // valid data
     if (StringUtils.isEmpty(message)) {
       return request
-          .createResponseBuilder(HttpStatus.OK)
+          .createResponseBuilder(HttpStatus.BAD_REQUEST)
           .header("content-type", "application/json")
           .body("message data is null")
           .build();
@@ -97,7 +113,18 @@ public class QueueDemoHttpHandler {
     //  send Message
     QueueClient queueClient =
         QueueUtils.createQueueClient(queueName, QueueUtils.getDefaultConnString());
-    SendMessageResult sendResult = queueClient.sendMessage(message);
+    SendMessageResult sendResult;
+    try {
+      sendResult = queueClient.sendMessage(message);
+    } catch (QueueStorageException e) {
+      logger.warning("send queue message error:%s" + e.getServiceMessage());
+
+      return request
+          .createResponseBuilder(HttpStatus.BAD_REQUEST)
+          .header("content-type", "application/json")
+          .body(createErrorResponseBody(e.getErrorCode().toString(), e.getServiceMessage()))
+          .build();
+    }
 
     QueueMsgDTO queueMsgDTO = new QueueMsgDTO();
     queueMsgDTO.setMessageId(sendResult.getMessageId());
@@ -137,7 +164,7 @@ public class QueueDemoHttpHandler {
           .body("popReceipt is required")
           .build();
     }
-    // delete message with queue
+    // update message with queue
     if (!request.getBody().isPresent()) {
       return request
           .createResponseBuilder(HttpStatus.BAD_REQUEST)
@@ -149,7 +176,7 @@ public class QueueDemoHttpHandler {
       UpdateMessageResult updateMessageResult =
           queueClient.updateMessage(
               messageId, popReceipt, request.getBody().get().getMessage(), null);
-
+      // create queue success response
       QueueMsgDTO queueMsgDTO = new QueueMsgDTO();
       queueMsgDTO.setNextVisibleTime(updateMessageResult.getTimeNextVisible());
       queueMsgDTO.setPopReceipt(updateMessageResult.getPopReceipt());
@@ -189,7 +216,16 @@ public class QueueDemoHttpHandler {
     // delete message with queue
     QueueClient queueClient =
         QueueUtils.createQueueClient(queueName, QueueUtils.getDefaultConnString());
-    queueClient.deleteMessage(messageId, popReceipt);
+    try {
+      queueClient.deleteMessage(messageId, popReceipt);
+    } catch (QueueStorageException e) {
+      logger.warning("delete queue message error:%s" + e.getServiceMessage());
+
+      return request
+          .createResponseBuilder(HttpStatus.BAD_REQUEST)
+          .body(createErrorResponseBody(e.getErrorCode().toString(), e.getServiceMessage()))
+          .build();
+    }
 
     MessageDTO messageDTO = new MessageDTO();
     messageDTO.setMessage(String.format("delete message %s success", messageId));
@@ -198,5 +234,12 @@ public class QueueDemoHttpHandler {
         .header("content-type", "application/json")
         .body(JsonUtils.toJsonString(messageDTO))
         .build();
+  }
+
+  private String createErrorResponseBody(String errorCode, String errorMessage) {
+    ErrorMessageDTO errorMessageDTO = new ErrorMessageDTO();
+    errorMessageDTO.setErrorCode(errorCode);
+    errorMessageDTO.setErrorMessage(errorMessage);
+    return JsonUtils.toJsonString(errorMessageDTO);
   }
 }
