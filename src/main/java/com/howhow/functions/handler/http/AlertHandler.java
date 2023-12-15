@@ -20,7 +20,7 @@ public class AlertHandler {
       @HttpTrigger(
               name = "request",
               methods = {HttpMethod.POST},
-              authLevel = AuthorizationLevel.FUNCTION,
+              authLevel = AuthorizationLevel.ANONYMOUS,
               route = "exceptions")
           HttpRequestMessage<String> request,
       final ExecutionContext context) {
