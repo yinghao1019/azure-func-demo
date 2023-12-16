@@ -60,12 +60,14 @@ public class AlertHandler {
       String webHookResponse = HttpClientUtils.postJsonRequest(webhookUrl, slackMessage.toString());
       logger.info(webHookResponse);
     } catch (IOException e) {
-      logger.warning("slack webhook error" + e.getMessage());
+      logger.warning("slack webhook error: " + e.getMessage());
     }
     return request.createResponseBuilder(HttpStatus.OK).body("Received alert").build();
   }
 
   private String getAlertMessage(String linkToSearchResultsAPI, Logger logger) throws IOException {
+    logger.info("application api :"+linkToSearchResultsAPI);
+
     String searchResult = getSearchResults(linkToSearchResultsAPI, logger);
     logger.info("SearchResult : " + searchResult);
     StringBuilder stringBuilder = new StringBuilder();
