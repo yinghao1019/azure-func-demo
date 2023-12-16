@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.howhow.functions.utils.HttpClientUtils;
 import com.howhow.functions.utils.JsonUtils;
 import com.microsoft.azure.functions.*;
@@ -53,7 +55,9 @@ public class AlertHandler {
 
     logger.info("alert message" + alertMessage);
     try {
-      String webHookResponse = HttpClientUtils.postJsonRequest(webhookUrl, alertMessage);
+      ObjectNode slackMessage = objectMapper.createObjectNode();
+      slackMessage.set("text", new TextNode(alertMessage));
+      String webHookResponse = HttpClientUtils.postJsonRequest(webhookUrl, slackMessage.toString());
       logger.info(webHookResponse);
     } catch (IOException e) {
       logger.warning("slack webhook error" + e.getMessage());
