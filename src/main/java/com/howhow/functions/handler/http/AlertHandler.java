@@ -62,7 +62,7 @@ public class AlertHandler {
   }
 
   private String getAlertMessage(String linkToSearchResultsAPI, Logger logger) throws IOException {
-    String searchResult = getSearchResults(linkToSearchResultsAPI);
+    String searchResult = getSearchResults(linkToSearchResultsAPI, logger);
     logger.info("SearchResult : " + searchResult);
     StringBuilder stringBuilder = new StringBuilder();
 
@@ -70,6 +70,7 @@ public class AlertHandler {
     JsonNode searchResultJsonNode = objectMapper.readTree(searchResult);
     // parse common alert webhook schema
     JsonNode columnsNode = searchResultJsonNode.findValue("columns");
+    logger.info(columnsNode.toString());
     if (columnsNode.isArray()) {
       for (JsonNode objNode : columnsNode) {
         String columnName = objNode.get("name").asText();
@@ -78,7 +79,7 @@ public class AlertHandler {
       stringBuilder.append("\n");
     }
     JsonNode rowsNode = searchResultJsonNode.findValue("rows");
-
+    logger.info(rowsNode.toString());
     // parse row
     if (rowsNode.isArray()) {
       for (JsonNode rowNode : rowsNode) {
@@ -94,9 +95,10 @@ public class AlertHandler {
     return stringBuilder.toString();
   }
 
-  private String getSearchResults(String linkToSearchResultsApi) throws IOException {
+  private String getSearchResults(String linkToSearchResultsApi, Logger logger) throws IOException {
     String applicationInsightKey = System.getenv("APPLICATION_INSIGHTS_KEY");
 
+    logger.info("key" + applicationInsightKey);
     Map<String, String> header = new HashMap<>();
     header.put("x-api-key", applicationInsightKey);
     return HttpClientUtils.getRequest(linkToSearchResultsApi, header);
