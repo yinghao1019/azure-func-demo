@@ -83,6 +83,13 @@ public class HttpClientUtils {
     return sendRequest(request);
   }
 
+  public static String getRequest(String targetUrl, Map<String, String> headers) throws IOException {
+    HttpGet request = new HttpGet(targetUrl);
+    configHeaders(request,headers);
+    return sendRequest(request);
+  }
+
+
   private static String sendRequest(HttpUriRequest request) throws IOException {
 
     try (CloseableHttpResponse httpResponse = httpClient.execute(request)) {
@@ -179,6 +186,7 @@ public class HttpClientUtils {
       }
     };
   }
+
 
   public static String get(String url) {
     HttpGet httpGet = new HttpGet(url);
