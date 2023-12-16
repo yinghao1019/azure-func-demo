@@ -103,8 +103,7 @@ public class AlertHandler {
 
   private String getSearchResults(String linkToSearchResultsApi, Logger logger) throws IOException {
     String applicationInsightKey = System.getenv("APPLICATION_INSIGHTS_KEY");
-
-    logger.info("key" + applicationInsightKey);
+    
     Map<String, String> header = new HashMap<>();
     header.put("x-api-key", applicationInsightKey);
     return HttpClientUtils.getRequest(linkToSearchResultsApi, header);
