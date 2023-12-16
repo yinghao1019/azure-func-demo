@@ -34,7 +34,6 @@ public class AlertHandler {
 
     Logger logger = context.getLogger();
     String webhookUrl = System.getenv(SLACK_WEBHOOK_URL);
-    logger.info("WebHookUrl" + webhookUrl);
 
     // TODO check request body value
     String body = request.getBody();
@@ -43,25 +42,29 @@ public class AlertHandler {
     //    parse slack api
     ObjectMapper objectMapper = JsonUtils.getObjectMapper();
     JsonNode alertBodyJsonNode = objectMapper.readTree(body);
-    String linkToSearchResultsAPI = alertBodyJsonNode.findValue("linkToSearchResultsAPI").asText();
+    JsonNode linkToSearchResults = alertBodyJsonNode.findValue("linkToSearchResultsAPI");
+    if (linkToSearchResults != null) {
+      String linkToSearchResultsAPI = linkToSearchResults.asText();
+      // call slack api
+      String alertMessage = "";
+      try {
+        alertMessage = getAlertMessage(linkToSearchResultsAPI, logger);
+      } catch (Exception e) {
+        logger.warning("parse alert message error " + e.getMessage());
+      }
 
-    // call slack api
-    String alertMessage = "";
-    try {
-      alertMessage = getAlertMessage(linkToSearchResultsAPI, logger);
-    } catch (Exception e) {
-      logger.warning("parse alert message error " + e.getMessage());
+      logger.info("alert message" + alertMessage);
+      try {
+        ObjectNode slackMessage = objectMapper.createObjectNode();
+        slackMessage.set("text", new TextNode(body));
+        String webHookResponse =
+            HttpClientUtils.postJsonRequest(webhookUrl, slackMessage.toString());
+        logger.info(webHookResponse);
+      } catch (IOException e) {
+        logger.warning("slack webhook error: " + e.getMessage());
+      }
     }
 
-    logger.info("alert message" + alertMessage);
-    try {
-      ObjectNode slackMessage = objectMapper.createObjectNode();
-      slackMessage.set("text", new TextNode(body));
-      String webHookResponse = HttpClientUtils.postJsonRequest(webhookUrl, slackMessage.toString());
-      logger.info(webHookResponse);
-    } catch (IOException e) {
-      logger.warning("slack webhook error: " + e.getMessage());
-    }
     return request.createResponseBuilder(HttpStatus.OK).body("Received alert").build();
   }
 
