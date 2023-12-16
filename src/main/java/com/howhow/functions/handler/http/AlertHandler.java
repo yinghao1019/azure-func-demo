@@ -66,7 +66,7 @@ public class AlertHandler {
   }
 
   private String getAlertMessage(String linkToSearchResultsAPI, Logger logger) throws IOException {
-    logger.info("application api :"+linkToSearchResultsAPI);
+    logger.info("application api :" + linkToSearchResultsAPI);
 
     String searchResult = getSearchResults(linkToSearchResultsAPI, logger);
     logger.info("SearchResult : " + searchResult);
