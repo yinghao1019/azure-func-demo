@@ -83,12 +83,12 @@ public class HttpClientUtils {
     return sendRequest(request);
   }
 
-  public static String getRequest(String targetUrl, Map<String, String> headers) throws IOException {
+  public static String getRequest(String targetUrl, Map<String, String> headers)
+      throws IOException {
     HttpGet request = new HttpGet(targetUrl);
-    configHeaders(request,headers);
+    configHeaders(request, headers);
     return sendRequest(request);
   }
-
 
   private static String sendRequest(HttpUriRequest request) throws IOException {
 
