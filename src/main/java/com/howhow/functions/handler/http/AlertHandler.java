@@ -56,7 +56,7 @@ public class AlertHandler {
       logger.info("alert message" + alertMessage);
       try {
         ObjectNode slackMessage = objectMapper.createObjectNode();
-        slackMessage.set("text", new TextNode(body));
+        slackMessage.set("text", new TextNode(alertMessage));
         String webHookResponse =
             HttpClientUtils.postJsonRequest(webhookUrl, slackMessage.toString());
         logger.info(webHookResponse);
