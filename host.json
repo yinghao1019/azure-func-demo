@@ -17,7 +17,7 @@
   },
   "logging": {
     "logLevel": {
-      "default": "Warning",
+      "default": "Information",
       "Host.Aggregator": "Trace",
       "Host.Results": "Information",
       "Function": "Information"
