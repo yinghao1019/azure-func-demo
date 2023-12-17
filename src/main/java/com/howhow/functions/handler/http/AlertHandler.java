@@ -13,7 +13,9 @@ import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -50,10 +52,10 @@ public class AlertHandler {
       try {
         alertMessage = getAlertMessage(linkToSearchResultsAPI, logger);
       } catch (Exception e) {
-        logger.warning("parse alert message error " + e.getMessage());
+        logger.warning("parse alert message error: " + e.getMessage());
       }
 
-      logger.info("alert message" + alertMessage);
+      logger.info("after process alert message" + alertMessage);
       try {
         ObjectNode slackMessage = objectMapper.createObjectNode();
         slackMessage.set("text", new TextNode(alertMessage));
@@ -71,42 +73,44 @@ public class AlertHandler {
   private String getAlertMessage(String linkToSearchResultsAPI, Logger logger) throws IOException {
     logger.info("application api :" + linkToSearchResultsAPI);
 
-    String searchResult = getSearchResults(linkToSearchResultsAPI, logger);
-    logger.info("SearchResult : " + searchResult);
+    String searchResult = getSearchResults(linkToSearchResultsAPI);
+
     StringBuilder stringBuilder = new StringBuilder();
 
     ObjectMapper objectMapper = JsonUtils.getObjectMapper();
     JsonNode searchResultJsonNode = objectMapper.readTree(searchResult);
     // parse common alert webhook schema
     JsonNode columnsNode = searchResultJsonNode.findValue("columns");
-    logger.info(columnsNode.toString());
+
     if (columnsNode.isArray()) {
+      List<String> columnNameList = new ArrayList<>();
       for (JsonNode objNode : columnsNode) {
-        String columnName = objNode.get("name").asText();
-        stringBuilder.append(columnName + " ");
+        columnNameList.add(objNode.get("name").asText());
       }
+      stringBuilder.append(String.join(", ", columnNameList));
       stringBuilder.append("\n");
     }
-    JsonNode rowsNode = searchResultJsonNode.findValue("rows");
-    logger.info(rowsNode.toString());
+
     // parse row
+    JsonNode rowsNode = searchResultJsonNode.findValue("rows");
     if (rowsNode.isArray()) {
       for (JsonNode rowNode : rowsNode) {
         ArrayNode arrayNode = (ArrayNode) rowNode;
+        List<String> valueList = new ArrayList<>();
         for (JsonNode valueNode : arrayNode) {
           if (valueNode.isValueNode()) {
-            stringBuilder.append(valueNode.asText() + " ");
+            valueList.add(valueNode.asText());
           }
         }
-        stringBuilder.append("\n");
+        stringBuilder.append(String.join(", ", valueList) + "\n");
       }
     }
     return stringBuilder.toString();
   }
 
-  private String getSearchResults(String linkToSearchResultsApi, Logger logger) throws IOException {
+  private String getSearchResults(String linkToSearchResultsApi) throws IOException {
     String applicationInsightKey = System.getenv("APPLICATION_INSIGHTS_KEY");
-    
+
     Map<String, String> header = new HashMap<>();
     header.put("x-api-key", applicationInsightKey);
     return HttpClientUtils.getRequest(linkToSearchResultsApi, header);
