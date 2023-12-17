@@ -5,7 +5,7 @@
     "version": "[4.*, 5.0.0)"
   },
   "aggregator": {
-    "batchSize": 1000,
+    "batchSize": 10,
     "flushTimeout": "00:00:15"
   },
   "extensions": {
