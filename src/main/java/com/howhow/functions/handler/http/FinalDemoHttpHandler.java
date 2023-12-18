@@ -152,7 +152,7 @@ public class FinalDemoHttpHandler {
               name = "req",
               methods = {HttpMethod.PUT},
               authLevel = AuthorizationLevel.FUNCTION,
-              route = "queue/{queueName}/messages/{messageId:alpha}")
+              route = "queue/{queueName}/messages/{messageId}")
           HttpRequestMessage<Optional<MessageDTO>> request,
       @BindingName("queueName") String queueName,
       @BindingName("messageId") String messageId,
@@ -201,7 +201,7 @@ public class FinalDemoHttpHandler {
               name = "req",
               methods = {HttpMethod.DELETE},
               authLevel = AuthorizationLevel.FUNCTION,
-              route = "queue/{queueName}/messages/{messageId:alpha}")
+              route = "queue/{queueName}/messages/{messageId}")
           HttpRequestMessage<String> request,
       @BindingName("queueName") String queueName,
       @BindingName("messageId") String messageId,
