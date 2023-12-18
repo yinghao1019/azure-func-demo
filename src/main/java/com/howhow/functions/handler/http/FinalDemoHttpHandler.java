@@ -60,15 +60,27 @@ public class FinalDemoHttpHandler {
           .build();
     }
 
-    PagedIterable<QueueMessageItem> queueMessageItems = null;
+    PagedIterable<QueueMessageItem> queueMessageItems =
+        queueClient.receiveMessages(
+            Integer.valueOf(maxMsg), visibleTimeOutDuration, Duration.ofSeconds(30), Context.NONE);
+    List<QueueMsgDTO> queueMsgDTOList;
     try {
-      queueMessageItems =
-          queueClient.receiveMessages(
-              Integer.valueOf(maxMsg),
-              visibleTimeOutDuration,
-              Duration.ofSeconds(30),
-              Context.NONE);
+      queueMsgDTOList =
+          queueMessageItems.stream()
+              .map(
+                  queueMessageItem -> {
+                    QueueMsgDTO queueMsgDTO = new QueueMsgDTO();
+                    queueMsgDTO.setMessageId(queueMessageItem.getMessageId());
+                    queueMsgDTO.setPopReceipt(queueMessageItem.getPopReceipt());
+                    queueMsgDTO.setBody(queueMessageItem.getMessageText());
+                    queueMsgDTO.setInsertionTime(queueMessageItem.getInsertionTime());
+                    queueMsgDTO.setExpirationTime(queueMessageItem.getExpirationTime());
+                    queueMsgDTO.setDequeueCount(queueMessageItem.getDequeueCount());
+                    return queueMsgDTO;
+                  })
+              .collect(Collectors.toList());
     } catch (QueueStorageException e) {
+
       logger.warning("query queue message error:%s" + e.getMessage());
 
       return request
@@ -77,22 +89,6 @@ public class FinalDemoHttpHandler {
           .body(createErrorResponseBody(e.getErrorCode().toString(), e.getServiceMessage()))
           .build();
     }
-
-    List<QueueMsgDTO> queueMsgDTOList =
-        queueMessageItems.stream()
-            .map(
-                queueMessageItem -> {
-                  QueueMsgDTO queueMsgDTO = new QueueMsgDTO();
-                  queueMsgDTO.setMessageId(queueMessageItem.getMessageId());
-                  queueMsgDTO.setPopReceipt(queueMessageItem.getPopReceipt());
-                  queueMsgDTO.setBody(queueMessageItem.getMessageText());
-                  queueMsgDTO.setInsertionTime(queueMessageItem.getInsertionTime());
-                  queueMsgDTO.setExpirationTime(queueMessageItem.getExpirationTime());
-                  queueMsgDTO.setDequeueCount(queueMessageItem.getDequeueCount());
-                  return queueMsgDTO;
-                })
-            .collect(Collectors.toList());
-
     return request
         .createResponseBuilder(HttpStatus.OK)
         .header("content-type", "application/json")
