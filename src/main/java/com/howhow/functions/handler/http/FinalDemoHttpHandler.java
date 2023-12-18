@@ -181,7 +181,7 @@ public class FinalDemoHttpHandler {
           QueueUtils.createQueueClient(queueName, QueueUtils.getDefaultConnString());
       UpdateMessageResult updateMessageResult =
           queueClient.updateMessage(
-              messageId, popReceipt, request.getBody().get().getMessage(), null);
+              messageId, popReceipt, request.getBody().get().getMessage(), Duration.ofSeconds(1));
       // create queue success response
       QueueMsgDTO queueMsgDTO = new QueueMsgDTO();
       queueMsgDTO.setNextVisibleTime(updateMessageResult.getTimeNextVisible());
