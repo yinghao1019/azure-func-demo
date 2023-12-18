@@ -47,8 +47,19 @@ public class FinalDemoHttpHandler {
     String maxMsg = reqParams.getOrDefault("maxMsg", "1");
     String visibleTimeOut = reqParams.getOrDefault("visibleTimeOut", "30");
     Duration visibleTimeOutDuration = Duration.ofSeconds(Integer.valueOf(visibleTimeOut));
-    QueueClient queueClient =
-        QueueUtils.createQueueClient(queueName, QueueUtils.getDefaultConnString());
+    QueueClient queueClient;
+    try{
+      queueClient=QueueUtils.createQueueClient(queueName, QueueUtils.getDefaultConnString());
+    }catch (QueueStorageException e){
+      logger.warning("create queue client error:%s" + e.getMessage());
+
+      return request
+              .createResponseBuilder(HttpStatus.BAD_REQUEST)
+              .header("content-type", "application/json")
+              .body(createErrorResponseBody(e.getErrorCode().toString(), e.getServiceMessage()))
+              .build();
+    }
+
 
     PagedIterable<QueueMessageItem> queueMessageItems = null;
     try {
